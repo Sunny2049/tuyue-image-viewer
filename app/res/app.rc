@@ -1,0 +1,30 @@
+1 ICON "icon.ico"
+
+1 VERSIONINFO
+FILEVERSION 1, 0, 0, 0
+PRODUCTVERSION 1, 0, 0, 0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080404B0"
+    BEGIN
+      VALUE "CompanyName", "图阅"
+      VALUE "FileDescription", "图阅 · 图片查看与文字提取"
+      VALUE "FileVersion", "1.0.0.0"
+      VALUE "InternalName", "tuyue"
+      VALUE "OriginalFilename", "图阅.exe"
+      VALUE "ProductName", "图阅"
+      VALUE "ProductVersion", "1.0.0.0"
+      VALUE "LegalCopyright", "本地运行，不联网"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x804, 1200
+  END
+END

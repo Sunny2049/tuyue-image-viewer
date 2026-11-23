@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>logo render</title>
+<style>html,body{margin:0;background:#fff}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<script>
+'use strict';
+
+const D = 512;
+
+function squircle(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function rrect(ctx, x, y, w, h, r) {
+  squircle(ctx, x, y, w, h, r);
+}
+
+/** 在 512 设计空间里画图标；size 决定笔画粗细与小尺寸简化 */
+function paintIcon(ctx, size) {
+  const tiny = size <= 24;
+  const k = size / D;
+  ctx.save();
+  ctx.scale(k, k);
+
+  // 底板
+  squircle(ctx, 0, 0, D, D, 116);
+  const g = ctx.createLinearGradient(30, 10, 480, 512);
+  g.addColorStop(0, '#5FA0FF');
+  g.addColorStop(0.45, '#2E63EF');
+  g.addColorStop(1, '#17309E');
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // 光感
+  ctx.save();
+  ctx.clip();
+  const glow = ctx.createRadialGradient(118, 48, 8, 118, 48, 420);
+  glow.addColorStop(0, 'rgba(255,255,255,0.34)');
+  glow.addColorStop(0.55, 'rgba(255,255,255,0.06)');
+  glow.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, D, D);
+  const depth = ctx.createLinearGradient(0, 260, 0, 512);
+  depth.addColorStop(0, 'rgba(10,22,64,0)');
+  depth.addColorStop(1, 'rgba(10,22,64,0.22)');
+  ctx.fillStyle = depth;
+  ctx.fillRect(0, 0, D, D);
+  ctx.restore();
+
+  // 图形：相框 + 文字条
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  if (tiny) {
+    // 16~24px：实心照片卡片 + 蓝色山峰 + 文字条，保证小尺寸仍有高对比
+    ctx.fillStyle = '#ffffff';
+    rrect(ctx, 130, 106, 252, 206, 38);
+    ctx.fill();
+    ctx.save();
+    rrect(ctx, 130, 106, 252, 206, 38);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(126, 316);
+    ctx.lineTo(206, 184);
+    ctx.lineTo(258, 250);
+    ctx.lineTo(302, 204);
+    ctx.lineTo(386, 316);
+    ctx.closePath();
+    ctx.fillStyle = '#2C5FEE';
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#ffffff';
+    rrect(ctx, 130, 344, 198, 62, 31);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  const lw = size <= 48 ? 34 : size <= 72 ? 28 : 24;
+  ctx.lineWidth = lw;
+
+  const fx = 140, fy = 114, fw = 232, fh = 174;
+  rrect(ctx, fx, fy, fw, fh, 26);
+  ctx.stroke();
+
+  if (size >= 48) {
+    // 太阳
+    ctx.beginPath();
+    ctx.arc(186, 168, 17, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (size >= 32) {
+    // 山脉
+    ctx.beginPath();
+    ctx.moveTo(fx + 26, fy + fh - 22);
+    ctx.lineTo(fx + 82, fy + 92);
+    ctx.lineTo(fx + 120, fy + 132);
+    ctx.lineTo(fx + 152, fy + 94);
+    ctx.lineTo(fx + fw - 22, fy + fh - 22);
+    ctx.stroke();
+  }
+
+  rrect(ctx, fx, 322, 200, 30, 15);
+  ctx.fill();
+  rrect(ctx, fx, 372, 128, 30, 15);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function png(size) {
+  const cv = document.getElementById('cv');
+  cv.width = size;
+  cv.height = size;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+  paintIcon(ctx, size);
+  return cv.toDataURL('image/png');
+}
+
+/** 展示图：浅色背景 + 图标 + 名称 + 说明 */
+function showcase() {
+  const W = 1280, H = 560;
+  const cv = document.createElement('canvas');
+  cv.width = W;
+  cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#FFFFFF');
+  bg.addColorStop(0.55, '#F4F7FD');
+  bg.addColorStop(1, '#E9EFFA');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 右侧淡蓝光晕
+  const halo = ctx.createRadialGradient(1010, 150, 20, 1010, 150, 520);
+  halo.addColorStop(0, 'rgba(47,107,255,0.13)');
+  halo.addColorStop(1, 'rgba(47,107,255,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, W, H);
+
+  // 图标 + 投影（先画到临时 canvas，再带阴影贴到目标位置）
+  const S = 232, X = 96, Y = (H - S) / 2;
+  const tmp = document.createElement('canvas');
+  tmp.width = S;
+  tmp.height = S;
+  paintIcon(tmp.getContext('2d'), S);
+  ctx.save();
+  ctx.shadowColor = 'rgba(23,48,158,0.28)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 16;
+  ctx.drawImage(tmp, X, Y);
+  ctx.restore();
+
+  const FONT = '"Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif';
+  const tx = X + S + 62;
+
+  ctx.fillStyle = '#101A33';
+  ctx.font = '700 104px ' + FONT;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('图阅', tx, 268);
+
+  ctx.fillStyle = '#4B5A78';
+  ctx.font = '400 30px ' + FONT;
+  ctx.fillText('图片查看器 · 提取图片文字', tx, 322);
+
+  ctx.fillStyle = '#8B96AD';
+  ctx.font = '400 24px ' + FONT;
+  ctx.fillText('TuYue  ·  Image viewer with offline OCR', tx, 368);
+
+  // 分隔线 + 三个要点
+  ctx.strokeStyle = 'rgba(27,33,48,0.10)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tx, 408);
+  ctx.lineTo(tx + 470, 408);
+  ctx.stroke();
+
+  const items = ['22 种格式', '离线识别', '设为默认看图'];
+  ctx.font = '600 22px ' + FONT;
+  let dx = tx;
+  for (const it of items) {
+    ctx.fillStyle = 'rgba(47,107,255,0.10)';
+    const w = ctx.measureText(it).width + 40;
+    rrect(ctx, dx, 436, w, 46, 23);
+    ctx.fill();
+    ctx.fillStyle = '#2F63EF';
+    ctx.fillText(it, dx + 20, 467);
+    dx += w + 16;
+  }
+
+  return cv.toDataURL('image/png');
+}
+
+window.png = png;
+window.showcase = showcase;
+
+/** 小尺寸放大对照表，用来检查 16/24/32px 的可读性 */
+function sheet() {
+  const list = [16, 20, 24, 32, 48, 64];
+  const cell = 150, pad = 22, top = 74;
+  const W = pad * 2 + cell * list.length;
+  const H = top + cell + 62;
+  const cv = document.createElement('canvas');
+  cv.width = W;
+  cv.height = H;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  const FONT = '"Microsoft YaHei UI", "Microsoft YaHei", sans-serif';
+  ctx.fillStyle = '#1b2130';
+  ctx.font = '600 22px ' + FONT;
+  ctx.fillText('图标小尺寸检查（原始像素放大显示）', pad, 40);
+
+  let x = pad;
+  for (const size of list) {
+    const t = document.createElement('canvas');
+    t.width = size;
+    t.height = size;
+    paintIcon(t.getContext('2d'), size);
+    const zoom = Math.min(4, Math.floor(cell / size));
+    const dw = size * zoom;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(t, x + (cell - dw) / 2, top + (cell - dw) / 2, dw, dw);
+    ctx.fillStyle = '#6a7488';
+    ctx.font = '400 15px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.fillText(size + 'px', x + cell / 2, top + cell + 30);
+    ctx.textAlign = 'left';
+    x += cell;
+  }
+  return cv.toDataURL('image/png');
+}
+window.sheet = sheet;
+</script>
+</body>
+</html>

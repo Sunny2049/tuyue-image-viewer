@@ -1,0 +1,51 @@
+[package]
+name = "tuyue"
+version = "0.1.0"
+edition = "2021"
+description = "图阅 · Windows 看图 + 图上划选文字 + 内容识别填充"
+license = "MIT"
+repository = "https://github.com/Sunny2049/tuyue-image-viewer"
+readme = "../README.md"
+keywords = ["image-viewer", "ocr", "windows", "webview2", "inpaint"]
+categories = ["graphics", "gui"]
+
+[[bin]]
+name = "图阅"
+path = "src/main.rs"
+
+[dependencies]
+tao = "0.37"
+wry = "0.57"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+rfd = "0.15"
+winreg = "0.55"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[target.x86_64-pc-windows-gnu.dependencies]
+windows = { version = "=0.58.0", features = [
+  "Foundation",
+  "Foundation_Collections",
+  "Globalization",
+  "Graphics_Imaging",
+  "Media_Ocr",
+  "Storage_Streams",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Security",
+  "Win32_System_Com",
+  "Win32_System_DataExchange",
+  "Win32_System_Memory",
+  "Win32_System_Ole",
+  "Win32_System_Threading",
+  "Win32_Storage_Xps",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }

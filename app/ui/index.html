@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' blob: data:;" />
+<title>图阅</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="titlebar">
+  <div class="brand">
+    <img src="icon.png" alt="" width="18" height="18" />
+    <span>图阅</span>
+  </div>
+  <div class="title-file" id="titleName">未打开图片</div>
+  <div class="title-actions">
+    <button class="tbtn" id="btnOpenFile" title="打开图片 (Ctrl+O)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2.5h6a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      打开图片
+    </button>
+    <button class="tbtn ghost" id="btnOpenFolder" title="打开文件夹 (Ctrl+Shift+O)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 6.5h6l1.8 2h8.2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 8.5h16" stroke="currentColor" stroke-width="1.8"/></svg>
+      打开文件夹
+    </button>
+    <div class="menu-wrap">
+      <button class="tbtn ghost" id="btnMore" title="更多">更多</button>
+      <div class="menu-pop" id="menuPop">
+        <button data-menu="makeDefault">设为默认看图软件…</button>
+        <button data-menu="checkAssoc">检查格式关联</button>
+        <button data-menu="unregister">取消文件关联…</button>
+        <div class="menu-sep"></div>
+        <button data-menu="formats">支持的格式</button>
+        <button data-menu="about">关于图阅</button>
+        <div class="menu-sep"></div>
+        <button data-menu="quit">退出</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="workspace">
+  <aside class="rail">
+    <div class="rail-head">
+      <span>图片列表</span>
+      <span class="rail-count" id="railCount">0</span>
+    </div>
+    <div class="rail-list" id="railList"></div>
+    <div class="rail-empty" id="railEmpty">
+      <div class="rail-empty-art">🖼</div>
+      <p>把图片或整个文件夹<br />拖进窗口即可查看</p>
+    </div>
+  </aside>
+
+  <main class="viewer">
+    <div class="toolbar">
+      <div class="tb-group">
+        <button class="ibtn" data-act="zoomOut" title="缩小 (Ctrl -)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="zoom-label" id="zoomLabel" data-act="zoomFit" title="点击适应窗口">100%</button>
+        <button class="ibtn" data-act="zoomIn" title="放大 (Ctrl +)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <span class="tb-sep"></span>
+        <button class="tbtn ghost sm" data-act="zoomFit">适应</button>
+        <button class="tbtn ghost sm" data-act="zoomActual">1:1</button>
+        <button class="ibtn" data-act="rotate" title="旋转 90° (R)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2.6 5.9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20 5.5V11h-5.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="tb-sep"></span>
+        <button class="ibtn tool" id="btnSelTool" title="框选填充 (M)：拖出方框，把框里的东西抹掉并补成背景">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8" stroke-dasharray="4 2.6"/><path d="M9.5 14.5l2.2-2.8 1.9 2.2 1.4-1.6 1.5 2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="ibtn tool" id="btnStitch" title="拼接一张图片（也可直接把图片拖到画面四边）">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="8" height="14" rx="1.6" stroke="currentColor" stroke-width="1.7"/><rect x="12.5" y="5" width="8" height="14" rx="1.6" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3.4 2.4"/></svg>
+        </button>
+        <button class="ibtn tool" id="btnUndo" title="撤销 (Ctrl+Z)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M8 7L4.5 10.5 8 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 10.5h9a5.5 5.5 0 0 1 0 11H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button class="tbtn ghost sm" id="btnSaveImg" title="另存为新图片 (Ctrl+Shift+S)" disabled>另存为</button>
+      </div>
+      <div class="tb-spacer"></div>
+      <div class="tb-group">
+        <button class="tbtn primary" id="btnOcr">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 8V6a2 2 0 0 1 2-2h2M17 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M7 20H5a2 2 0 0 1-2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          提取文字
+        </button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="stage-inner" id="stageInner">
+        <img id="viewer" alt="" draggable="false" />
+        <canvas id="editCanvas" class="edit-canvas"></canvas>
+        <div class="boxes" id="boxes"></div>
+        <div class="marquee" id="marquee"></div>
+      </div>
+
+      <div class="stitch-guide" id="stitchGuide">
+        <div class="sg-zone sg-top" data-dir="top"><span>拼到上方</span></div>
+        <div class="sg-zone sg-bottom" data-dir="bottom"><span>拼到下方</span></div>
+        <div class="sg-zone sg-left" data-dir="left"><span>拼到左侧</span></div>
+        <div class="sg-zone sg-right" data-dir="right"><span>拼到右侧</span></div>
+        <div class="sg-zone sg-center" data-dir="open"><span>打开这张图</span></div>
+      </div>
+
+      <div class="stage-empty" id="stageEmpty">
+        <div class="empty-art">
+          <svg width="72" height="72" viewBox="0 0 48 48" fill="none">
+            <rect x="5" y="9" width="38" height="30" rx="6" stroke="#c8d0e0" stroke-width="2"/>
+            <circle cx="16" cy="19" r="3.4" fill="#d7deeb"/>
+            <path d="M8 33l8.5-8a3 3 0 0 1 4.2 0L28 31M27 30l4-3.6a3 3 0 0 1 4 0l5 4.4" stroke="#c8d0e0" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h2>拖入图片，或点右上角打开</h2>
+        <p>支持 JPG / PNG / GIF / WEBP / BMP / ICO / SVG / AVIF / TIFF / HEIC</p>
+        <div class="empty-actions">
+          <button class="tbtn primary" id="btnEmptyFile">打开图片</button>
+          <button class="tbtn ghost" id="btnEmptyFolder">打开文件夹</button>
+        </div>
+        <div class="empty-assoc" id="emptyAssoc">
+          <span class="dot"></span>
+          <span id="emptyAssocText">设为系统默认看图软件</span>
+          <button class="tbtn ghost sm" id="btnMakeDefault">设为默认</button>
+        </div>
+      </div>
+
+      <div class="stage-loading" id="stageLoading"><span class="spinner"></span><span id="stageLoadingText">解码中…</span></div>
+      <div class="stage-error" id="stageError"></div>
+    </div>
+
+    <div class="statusbar">
+      <span class="sb-name" id="stName">—</span>
+      <span class="sb-dim" id="stMeta"></span>
+      <div class="sb-spacer"></div>
+      <button class="sb-btn" id="btnPrev" title="上一张 (←)">←</button>
+      <span id="stIndex">0 / 0</span>
+      <button class="sb-btn" id="btnNext" title="下一张 (→)">→</button>
+    </div>
+  </main>
+
+  <aside class="panel" id="panel">
+    <div class="panel-head">
+      <span class="panel-title">文字提取</span>
+      <button class="ibtn" id="btnClosePanel" title="收起面板">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="panel-controls">
+      <div class="ctrl-row">
+        <label>语言</label>
+        <select id="selLang">
+          <option value="chi_sim+eng">中文 + 英文</option>
+          <option value="chi_sim">仅中文</option>
+          <option value="eng">仅英文</option>
+        </select>
+      </div>
+      <div class="engine-note">使用系统自带识别引擎，不需下载模型</div>
+      <label class="check"><input type="checkbox" id="chkBoxes" /><span>在图片上标出文字位置</span></label>
+      <label class="check"><input type="checkbox" id="chkSelect" checked /><span>图片上可直接划选复制</span></label>
+
+      <div class="panel-actions">
+        <button class="tbtn primary block" id="btnRunOcr">识别当前图片</button>
+        <button class="tbtn ghost block" id="btnBatchOcr">批量识别本文件夹</button>
+        <button class="tbtn ghost block" id="btnEraseText" disabled>擦掉文字（保留背景）</button>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress"><i id="progressBar"></i></div>
+        <span class="progress-label" id="progressLabel">准备中…</span>
+      </div>
+    </div>
+
+    <div class="panel-result">
+      <textarea id="ocrText" spellcheck="false" placeholder="识别结果会出现在这里，可直接编辑、复制或保存。"></textarea>
+    </div>
+
+    <div class="panel-foot">
+      <span class="ocr-stat" id="ocrStat">未识别</span>
+      <div class="foot-actions">
+        <button class="tbtn ghost sm" id="btnCopyText">复制</button>
+        <button class="tbtn ghost sm" id="btnSaveText">保存</button>
+        <button class="tbtn ghost sm" id="btnClearText">清空</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="drop-mask" id="dropMask"><div class="drop-card">松开即可打开</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="sel-chip" id="selChip">
+  <span id="selChipCount">已选 0 字</span>
+  <button id="selChipCopy" title="复制 (Ctrl+C)">复制</button>
+</div>
+
+<div class="fill-chip" id="fillChip">
+  <span id="fillChipInfo">已选 0 × 0</span>
+  <button id="fillChipRun" title="把框里的内容抹掉，用周围背景补上">内容识别填充</button>
+  <button class="ghost" id="fillChipCancel">取消</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span id="modalTitle">标题</span>
+      <button class="ibtn" id="modalClose" title="关闭">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="bridge.js"></script>
+<script src="vendor/UTIF.js"></script>
+<script src="decode.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

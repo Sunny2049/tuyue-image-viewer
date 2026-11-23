@@ -1,0 +1,12 @@
+# 仅在两种情况下才需要这个文件：
+#   1) 用 x86_64-pc-windows-gnu 工具链；
+#   2) 本机没有 gcc / mingw-w64-gcc（rustc 默认会去找 gcc 当链接器，找不到就报错）。
+#
+# 用法：复制成 app/.cargo/config.toml，把 <sysroot> 换成下面命令打印出来的路径：
+#   rustc +stable-x86_64-pc-windows-gnu --print sysroot
+#
+# 用 MSVC 工具链（推荐，Windows 上装 Visual Studio Build Tools 即可）不需要这个文件。
+
+[target.x86_64-pc-windows-gnu]
+linker = "<sysroot>/lib/rustlib/x86_64-pc-windows-gnu/bin/rust-lld.exe"
+rustflags = ["-C", "link-arg=--no-insert-timestamp"]

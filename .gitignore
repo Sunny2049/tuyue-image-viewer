@@ -1,0 +1,35 @@
+# ---- 编译产物 ----
+/app/target/
+/app/.cargo/config.toml
+/app/res/app_res.o
+*.pdb
+*.exp
+*.lib
+
+# ---- 便携工具链（体积大，自行下载）----
+/tools/mingw/
+__pycache__/
+
+# ---- 本地测试 / 自检产物 ----
+/build/
+/.smoke/
+/.screenshots/
+/dist-rust/
+/.workbuddy/
+shot.json
+shot.bmp
+boot.log
+filltest.json
+
+# ---- 一次性的本机运维脚本（与项目无关）----
+/tools/purge-electron.py
+/tools/recycle-*.js
+/tools/bin-list.py
+/tools/unzst.js
+
+# ---- 编辑器 / 系统 ----
+/.vscode/
+/.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
